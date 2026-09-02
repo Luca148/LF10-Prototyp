@@ -8,6 +8,6 @@ Accept: application/json
 POST {{LF10.Api_HostAddress}}/api/harassmentfilter
 Content-Type: application/json
 
-"hate"
+"i hate you!"
 
 ###
