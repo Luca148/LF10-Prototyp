@@ -1,19 +1,16 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import LoginComponent from "./Login/LoginComponent";
+import Chatroom from "./ChatRoom/Chatroom";
 import "./App.css";
 
 function App() {
-  useEffect(() => {
-    fetch("/api/WeatherForecast")
-      .then((response) => response.json())
-      .then((data) => console.log(data));
-  }, []);
+  const [username, setUsername] = useState<string | null>(null);
 
-  return (
-    <>
-      <LoginComponent onLogin={(username) => console.log(username)} />
-    </>
-  );
+  if (!username) {
+    return <LoginComponent onLogin={setUsername} />;
+  }
+
+  return <Chatroom username={username} />;
 }
 
 export default App;
