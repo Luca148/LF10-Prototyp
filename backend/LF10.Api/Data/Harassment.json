@@ -1,11 +1,112 @@
 {
-  "HarasmentTypes": [
+  "HarassmentTypes": [
     {
-      "Bullying": [
-        {
-          "fuck": "love"
-        }
-      ]
+      "Type": "None",
+      "Words": {}
+    },
+    {
+      "Type": "Bullying",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "Insult",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "Threat",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "Racism",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "Discrimination",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "HateSpeech",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "SexualHarassment",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "SexualContent",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "Violence",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "Profanity",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "Stalking",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "PersonalAttack",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
+    },
+    {
+      "Type": "Spam",
+      "Words": {
+        "word1": "word1",
+        "word2": "word2",
+        "word3": "word3"
+      }
     }
   ]
 }
