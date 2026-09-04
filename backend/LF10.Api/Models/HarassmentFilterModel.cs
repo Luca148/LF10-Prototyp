@@ -12,6 +12,7 @@ public class HarassmentTypes
     public string Type { get; set; }
 
     public Dictionary<string, string> Words { get; set; } = [];
+    public Dictionary<string, string> Phrases { get; set; } = [];
 }
 
 public class FilterResponse

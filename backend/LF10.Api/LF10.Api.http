@@ -1,13 +1,50 @@
 @LF10.Api_HostAddress = http://localhost:5273
 
-GET {{LF10.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+POST {{LF10.Api_HostAddress}}/api/harassmentfilter
+Content-Type: application/json
+
+"i hate you! fuck you!"
 
 ###
 
 POST {{LF10.Api_HostAddress}}/api/harassmentfilter
 Content-Type: application/json
 
-"i hate you! fuck you!"
+"you are such a pathetic loser and a complete idiot"
+
+###
+
+POST {{LF10.Api_HostAddress}}/api/harassmentfilter
+Content-Type: application/json
+
+"shut up you stupid bitch, nobody likes your ugly face"
+
+###
+
+POST {{LF10.Api_HostAddress}}/api/harassmentfilter
+Content-Type: application/json
+
+"i will find you and kill you, watch your back"
+
+###
+
+POST {{LF10.Api_HostAddress}}/api/harassmentfilter
+Content-Type: application/json
+
+"you're just a dirty nigger and a fucking retard"
+
+###
+
+POST {{LF10.Api_HostAddress}}/api/harassmentfilter
+Content-Type: application/json
+
+"send nudes right now you slut, i want to fuck that tight pussy"
+
+###
+
+POST {{LF10.Api_HostAddress}}/api/harassmentfilter
+Content-Type: application/json
+
+"hello, how are you doing today? hope you have a great day!"
 
 ###

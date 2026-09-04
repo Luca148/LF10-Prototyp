@@ -1,11 +1,20 @@
 ﻿using LF10.Api.Models;
+using System.Diagnostics;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace LF10.Api.Services;
 
 public class HarassmentFilterService
 {
     private HarassmentCategory harassmentCategory = new();
+
+    private FilterResponse emptyResponse = new()
+    {
+        Message = string.Empty,
+        HarassmentTypes = ["None"]
+    };
+
 
     public HarassmentFilterService(IHostEnvironment environment)
     {
@@ -21,28 +30,62 @@ public class HarassmentFilterService
 
     public FilterResponse FilterMessage(string message)
     {
+        FilterResponse response = new();
         List<string> harassmentTypes = [];
 
-        foreach (string word in message.Split(' '))
+        if (string.IsNullOrWhiteSpace(message))
         {
-            foreach(HarassmentTypes harassmentType in harassmentCategory.HarassmentTypes)
+            emptyResponse.Timestamp = DateTime.Now;
+
+            return emptyResponse;
+        }
+
+        var result = message;
+
+        foreach (var harassmentType in harassmentCategory.HarassmentTypes)
+        {
+            foreach (var phrase in harassmentType.Phrases)
             {
-                if (harassmentType.Words.TryGetValue(word, out var replacement))
+                var oldResult = result;
+
+                result = result.Replace(
+                    phrase.Key,
+                    phrase.Value,
+                    StringComparison.OrdinalIgnoreCase);
+
+                if (result != oldResult)
                 {
-                    message = message.Replace(word, replacement);
                     harassmentTypes.Add(harassmentType.Type);
+                }
+            }
+        }
+
+        foreach (var harassmentType in harassmentCategory.HarassmentTypes)
+        {
+            foreach (var word in harassmentType.Words)
+            {
+                var pattern = $@"\b{Regex.Escape(word.Key)}\b";
+
+                if (Regex.IsMatch(result, pattern, RegexOptions.IgnoreCase))
+                {
+                    harassmentTypes.Add(harassmentType.Type);
+
+                    result = Regex.Replace(
+                        result,
+                        pattern,
+                        word.Value,
+                        RegexOptions.IgnoreCase);
                 }
             }
         }
 
         harassmentTypes = [.. harassmentTypes.Distinct()];
 
-        FilterResponse response = new()
-        {
-            Message = message,
-            HarassmentTypes = harassmentTypes,
-            Timestamp = DateTime.Now
-        };
+        if (harassmentTypes.Count == 0) harassmentTypes.Add("None");
+
+        response.Message = result;
+        response.HarassmentTypes = harassmentTypes;
+        response.Timestamp = DateTime.Now;
 
         return response;
     }
