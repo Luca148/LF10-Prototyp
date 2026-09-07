@@ -1,6 +1,4 @@
-﻿using static System.Net.Mime.MediaTypeNames;
-
-namespace LF10.Api.Models;
+﻿namespace LF10.Api.Models;
 
 public class HarassmentCategory
 {
@@ -16,11 +14,11 @@ public class HarassmentTypes
 }
 
 public class FilterResponse
-    {
-        public string Message { get; set; }
-        public List<string> HarassmentTypes { get; set; }
-        public DateTime Timestamp { get; set; }
-    }
+{
+    public string Message { get; set; }
+    public List<string> HarassmentTypes { get; set; }
+    public DateTime Timestamp { get; set; }
+}
 
 public enum HarassmentType
 {
