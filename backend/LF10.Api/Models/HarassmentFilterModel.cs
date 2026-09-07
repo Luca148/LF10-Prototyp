@@ -1,9 +1,22 @@
 ﻿namespace LF10.Api.Models;
 
+public class HarassmentCategory
+{
+    public List<HarassmentTypes> HarassmentTypes { get; set; }
+}
+
+public class HarassmentTypes
+{
+    public string Type { get; set; }
+
+    public Dictionary<string, string> Words { get; set; } = [];
+    public Dictionary<string, string> Phrases { get; set; } = [];
+}
+
 public class FilterResponse
 {
     public string Message { get; set; }
-    public string HarassmentType { get; set; }
+    public List<string> HarassmentTypes { get; set; }
     public DateTime Timestamp { get; set; }
 }
 
