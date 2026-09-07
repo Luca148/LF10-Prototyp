@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Data\User.json" CopyToOutputDirectory="PreserveNewest" />
     <Folder Include="Data\" />
   </ItemGroup>
 
