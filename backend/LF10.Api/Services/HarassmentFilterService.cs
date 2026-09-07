@@ -12,6 +12,10 @@ public class HarassmentFilterService
         {
             filteredMessage = message.Replace("hate", "love");
         }
+        else
+        {
+            filteredMessage = message;
+        }
 
         FilterResponse response = new()
         {
