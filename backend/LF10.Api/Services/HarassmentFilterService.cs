@@ -39,7 +39,7 @@ public class HarassmentFilterService
             return emptyResponse;
         }
 
-        var result = message;
+        var result = message.ToLower();
 
         foreach (var harassmentType in harassmentCategory.HarassmentTypes)
         {

@@ -1,4 +1,6 @@
-﻿namespace LF10.Api.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LF10.Api.Models;
 
 public class LoginModel
 {
