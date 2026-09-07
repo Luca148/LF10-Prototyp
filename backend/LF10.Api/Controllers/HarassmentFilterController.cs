@@ -7,9 +7,16 @@ namespace LF10.Api.Controllers;
 [Route("api/[controller]")]
 public class HarassmentFilterController : ControllerBase
 {
+    private readonly HarassmentFilterService _filterService;
+
+    public HarassmentFilterController(HarassmentFilterService filterService)
+    {
+        _filterService = filterService;
+    }
+
     [HttpPost]
     public IActionResult Post([FromBody] string value)
     {
-        return Ok(HarassmentFilterService.FilterMessage(value));
+        return Ok(_filterService.FilterMessage(value));
     }
 }
