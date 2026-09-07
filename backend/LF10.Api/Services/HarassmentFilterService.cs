@@ -36,7 +36,6 @@ public class HarassmentFilterService
         if (string.IsNullOrWhiteSpace(message))
         {
             emptyResponse.Timestamp = DateTime.Now;
-
             return emptyResponse;
         }
 
@@ -46,25 +45,8 @@ public class HarassmentFilterService
         {
             foreach (var phrase in harassmentType.Phrases)
             {
-                var oldResult = result;
-
-                result = result.Replace(
-                    phrase.Key,
-                    phrase.Value,
-                    StringComparison.OrdinalIgnoreCase);
-
-                if (result != oldResult)
-                {
-                    harassmentTypes.Add(harassmentType.Type);
-                }
-            }
-        }
-
-        foreach (var harassmentType in harassmentCategory.HarassmentTypes)
-        {
-            foreach (var word in harassmentType.Words)
-            {
-                var pattern = $@"\b{Regex.Escape(word.Key)}\b";
+                // Pattern: base word + optional suffix (s, d, ed, ing, etc.)
+                var pattern = $@"\b{Regex.Escape(phrase.Key)}(s|ed|ing|d|er|est)?\b";
 
                 if (Regex.IsMatch(result, pattern, RegexOptions.IgnoreCase))
                 {
@@ -73,7 +55,26 @@ public class HarassmentFilterService
                     result = Regex.Replace(
                         result,
                         pattern,
-                        word.Value,
+                        m => phrase.Value + m.Groups[1].Value,  // replacement + captured suffix
+                        RegexOptions.IgnoreCase);
+                }
+            }
+        }
+
+        foreach (var harassmentType in harassmentCategory.HarassmentTypes)
+        {
+            foreach (var word in harassmentType.Words)
+            {
+                var pattern = $@"\b{Regex.Escape(word.Key)}(s|ed|ing|d|er|est)?\b";
+
+                if (Regex.IsMatch(result, pattern, RegexOptions.IgnoreCase))
+                {
+                    harassmentTypes.Add(harassmentType.Type);
+
+                    result = Regex.Replace(
+                        result,
+                        pattern,
+                        m => word.Value + m.Groups[1].Value,  // replacement + captured suffix
                         RegexOptions.IgnoreCase);
                 }
             }
