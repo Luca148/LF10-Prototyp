@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="../HarassmentFilter.Core/HarassmentFilter.Core.csproj" />
   <Project Path="LF10.Api.csproj" />
 </Solution>

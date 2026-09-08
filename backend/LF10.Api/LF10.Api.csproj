@@ -11,14 +11,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Data\User.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Data\*.json" CopyToOutputDirectory="PreserveNewest" />
     <Folder Include="Data\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="Data\Harassment.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <ProjectReference Include="..\HarassmentFilter.Core\HarassmentFilter.Core.csproj" />
   </ItemGroup>
 
 </Project>
