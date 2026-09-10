@@ -12,6 +12,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false, // backend uses a self-signed dev certificate
       },
+      "/chathub": {
+        target: "https://localhost:7255",
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      },
     },
   },
 });

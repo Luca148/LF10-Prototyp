@@ -6,6 +6,7 @@ import UserComponent, {
 } from "../UserComponent/UserComponent";
 
 import { FilterMessageController } from "../Controllers/FilterController";
+import { HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 
 interface ChatMessage {
   id: number;
@@ -29,28 +30,6 @@ interface PendingReview {
   harassmentTypes: string[];
 }
 
-// Placeholder data until SignalR is wired up.
-const initialMessages: ChatMessage[] = [
-  {
-    id: 1,
-    username: "Maya",
-    text: "Hi folks! Welcome to General 👋",
-    timestamp: "10:24",
-  },
-  {
-    id: 2,
-    username: "Zed",
-    text: "Just joined the chat, hello everyone!",
-    timestamp: "10:26",
-  },
-  {
-    id: 3,
-    username: "Luna",
-    text: "Hey Zed, glad you're here 🙌",
-    timestamp: "10:28",
-  },
-];
-
 const onlineUsers: OnlineUser[] = [
   { username: "Lukas", status: "online" },
   { username: "Permata", status: "online" },
@@ -64,8 +43,12 @@ const onlineUsers: OnlineUser[] = [
 const formatHarassmentType = (type: string) =>
   type.replace(/([a-z])([A-Z])/g, "$1 $2");
 
+// Built once when this module first loads, so React's Strict Mode double-render
+// never creates or races multiple connections.
+const connection = new HubConnectionBuilder().withUrl("/chathub").build();
+
 function Chatroom({ username }: ChatroomProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [pendingReview, setPendingReview] = useState<PendingReview | null>(
@@ -75,21 +58,45 @@ function Chatroom({ username }: ChatroomProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const handleReceiveMessage = (result: {
+      message: string;
+      timestamp: string;
+      username: string;
+    }) => {
+      const newMessage: ChatMessage = {
+        id: Date.now(),
+        username: result.username,
+        text: result.message,
+        timestamp: new Date(result.timestamp).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, newMessage]);
+    };
+
+    connection.on("ReceiveMessage", handleReceiveMessage);
+
+    if (connection.state === HubConnectionState.Disconnected) {
+      connection
+        .start()
+        .then(() => connection.invoke("JoinRoom", 1))
+        .catch((error) => console.error(error));
+    }
+
+    return () => {
+      connection.off("ReceiveMessage", handleReceiveMessage);
+    };
+  }, []);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const postMessage = (text: string) => {
-    const newMessage: ChatMessage = {
-      id: Date.now(),
-      username,
-      text,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    setMessages((previous) => [...previous, newMessage]);
+    connection.invoke("SendMessage", 1, text, username).catch((error) => {
+      console.error(error);
+    });
   };
 
   const handleSend = async (event: React.FormEvent) => {
