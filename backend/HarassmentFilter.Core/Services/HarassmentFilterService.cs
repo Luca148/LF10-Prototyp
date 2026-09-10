@@ -28,7 +28,7 @@ public class HarassmentFilterService(HarassmentFilterConfiguration configuration
         {
             foreach (var phrase in harassmentType.Phrases)
             {
-                var pattern = $@"\b{Regex.Escape(phrase.Key)}(s|ed|ing|d|er|est)?\b";
+                var pattern = $@"\b{Regex.Escape(phrase.Key)}(es|s|ed|ing|d|er|est)?\b";
 
                 if (Regex.IsMatch(result, pattern, RegexOptions.IgnoreCase))
                 {
@@ -47,7 +47,7 @@ public class HarassmentFilterService(HarassmentFilterConfiguration configuration
         {
             foreach (var word in harassmentType.Words)
             {
-                var pattern = $@"\b{Regex.Escape(word.Key)}(s|ed|ing|d|er|est)?\b";
+                var pattern = $@"\b{Regex.Escape(word.Key)}(es|s|ed|ing|d|er|est)?\b";
 
                 if (Regex.IsMatch(result, pattern, RegexOptions.IgnoreCase))
                 {

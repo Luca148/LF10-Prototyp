@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./Chatroom.css";
 import UserComponent, {
   getAvatarColor,
-  type UserStatus,
+  // type UserStatus,
 } from "../UserComponent/UserComponent";
 
 import { FilterMessageController } from "../Controllers/FilterController";
@@ -15,10 +15,10 @@ interface ChatMessage {
   timestamp: string;
 }
 
-interface OnlineUser {
-  username: string;
-  status: UserStatus;
-}
+// interface OnlineUser {
+//   username: string;
+//   status: UserStatus;
+// }
 
 interface ChatroomProps {
   username: string;
@@ -30,14 +30,14 @@ interface PendingReview {
   harassmentTypes: string[];
 }
 
-const onlineUsers: OnlineUser[] = [
-  { username: "Lukas", status: "online" },
-  { username: "Permata", status: "online" },
-  { username: "Jan-Luca", status: "online" },
-  { username: "Mariam", status: "offline" },
-  { username: "Kevin", status: "online" },
-  { username: "Veeti", status: "online" },
-];
+// const onlineUsers: OnlineUser[] = [
+//   { username: "Lukas", status: "online" },
+//   { username: "Permata", status: "online" },
+//   { username: "Jan-Luca", status: "online" },
+//   { username: "Mariam", status: "offline" },
+//   { username: "Kevin", status: "online" },
+//   { username: "Veeti", status: "online" },
+// ];
 
 // "SexualHarassment" -> "Sexual Harassment"
 const formatHarassmentType = (type: string) =>
@@ -56,6 +56,14 @@ function Chatroom({ username }: ChatroomProps) {
   );
   const [reviewText, setReviewText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
+  const messageInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isChecking && !pendingReview) {
+      messageInputRef.current?.focus();
+    }
+  }, [isChecking, pendingReview]);
 
   useEffect(() => {
     const handleReceiveMessage = (result: {
@@ -76,16 +84,20 @@ function Chatroom({ username }: ChatroomProps) {
     };
 
     connection.on("ReceiveMessage", handleReceiveMessage);
+    connection.on("UserListUpdated", (users: string[]) => {
+      setConnectedUsers(users);
+    });
 
     if (connection.state === HubConnectionState.Disconnected) {
       connection
         .start()
-        .then(() => connection.invoke("JoinRoom", 1))
+        .then(() => connection.invoke("JoinRoom", 1, username))
         .catch((error) => console.error(error));
     }
 
     return () => {
       connection.off("ReceiveMessage", handleReceiveMessage);
+      connection.off("UserListUpdated");
     };
   }, []);
 
@@ -190,13 +202,11 @@ function Chatroom({ username }: ChatroomProps) {
 
         <div className="online-list">
           <span className="online-list-title">Online Now</span>
-          {onlineUsers.map((user) => (
-            <UserComponent
-              key={user.username}
-              username={user.username}
-              status={user.status}
-            />
-          ))}
+          {connectedUsers
+            .filter((user) => user !== username)
+            .map((user) => (
+              <UserComponent key={user} username={user} status={"online"} />
+            ))}
         </div>
 
         <div className="current-user">
@@ -239,6 +249,7 @@ function Chatroom({ username }: ChatroomProps) {
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
             disabled={isChecking || !!pendingReview}
+            ref={messageInputRef}
           />
           <button
             type="submit"
