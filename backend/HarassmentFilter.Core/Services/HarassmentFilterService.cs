@@ -22,13 +22,12 @@ public class HarassmentFilterService(HarassmentFilterConfiguration configuration
             return emptyResult;
         }
 
-        var result = message;
+        var result = message.ToLower();
 
         foreach (var harassmentType in configuration.HarassmentCategories)
         {
             foreach (var phrase in harassmentType.Phrases)
             {
-                // Pattern: base word + optional suffix (s, d, ed, ing, etc.)
                 var pattern = $@"\b{Regex.Escape(phrase.Key)}(s|ed|ing|d|er|est)?\b";
 
                 if (Regex.IsMatch(result, pattern, RegexOptions.IgnoreCase))
@@ -38,7 +37,7 @@ public class HarassmentFilterService(HarassmentFilterConfiguration configuration
                     result = Regex.Replace(
                         result,
                         pattern,
-                        m => phrase.Value + m.Groups[1].Value,  // replacement + captured suffix
+                        m => phrase.Value + m.Groups[1].Value,
                         RegexOptions.IgnoreCase);
                 }
             }
@@ -57,7 +56,7 @@ public class HarassmentFilterService(HarassmentFilterConfiguration configuration
                     result = Regex.Replace(
                         result,
                         pattern,
-                        m => word.Value + m.Groups[1].Value,  // replacement + captured suffix
+                        m => word.Value + m.Groups[1].Value,
                         RegexOptions.IgnoreCase);
                 }
             }
