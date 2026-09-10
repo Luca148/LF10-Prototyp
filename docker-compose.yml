@@ -9,7 +9,7 @@ services:
       # Persists Data/User.json across restarts and redeploys.
       - backend-data:/app/Data
     expose:
-      - "8080"
+      - "9900"
 
   frontend:
     build:
@@ -17,8 +17,21 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-    ports:
-      - "80:80"
+    # No published port: traffic comes in through the Cloudflare Tunnel.
+    # For direct LAN access add e.g.  ports: ["8080:80"]
+    expose:
+      - "99"
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      # Put the token in a .env file next to this file (git-ignored):
+      #   TUNNEL_TOKEN=eyJ...
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env}
+    depends_on:
+      - frontend
 
 volumes:
   backend-data:
