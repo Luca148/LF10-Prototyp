@@ -1,6 +1,6 @@
 export interface FilterResponse {
   message: string;
-  harassmentType: string;
+  harassmentTypes: string[];
   timestamp: string;
 }
 

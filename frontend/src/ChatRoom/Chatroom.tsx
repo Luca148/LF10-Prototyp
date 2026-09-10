@@ -23,6 +23,12 @@ interface ChatroomProps {
   username: string;
 }
 
+interface PendingReview {
+  original: string;
+  suggestion: string;
+  harassmentTypes: string[];
+}
+
 // Placeholder data until SignalR is wired up.
 const initialMessages: ChatMessage[] = [
   {
@@ -54,40 +60,117 @@ const onlineUsers: OnlineUser[] = [
   { username: "Veeti", status: "online" },
 ];
 
+// "SexualHarassment" -> "Sexual Harassment"
+const formatHarassmentType = (type: string) =>
+  type.replace(/([a-z])([A-Z])/g, "$1 $2");
+
 function Chatroom({ username }: ChatroomProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState("");
+  const [isChecking, setIsChecking] = useState(false);
+  const [pendingReview, setPendingReview] = useState<PendingReview | null>(
+    null,
+  );
+  const [reviewText, setReviewText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const text = draft.trim();
-    if (!text) return;
-
-    let filterResult;
-    try {
-      filterResult = await FilterMessageController(text);
-    } catch (error) {
-      console.error("Harassment filter check failed", error);
-      return;
-    }
-
+  const postMessage = (text: string) => {
     const newMessage: ChatMessage = {
       id: Date.now(),
       username,
-      text: filterResult.message,
-      timestamp: new Date(filterResult.timestamp).toLocaleTimeString([], {
+      text,
+      timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       }),
     };
 
     setMessages((previous) => [...previous, newMessage]);
+  };
+
+  const handleSend = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const text = draft.trim();
+    if (!text || isChecking) return;
+
+    setIsChecking(true);
+    let filterResult;
+    try {
+      filterResult = await FilterMessageController(text);
+    } catch (error) {
+      console.error("Harassment filter check failed", error);
+      setIsChecking(false);
+      return;
+    }
+    setIsChecking(false);
+
+    const flaggedTypes = (filterResult.harassmentTypes ?? []).filter(
+      (type) => type.toLowerCase() !== "none",
+    );
+
+    if (flaggedTypes.length === 0) {
+      postMessage(filterResult.message);
+      setDraft("");
+      return;
+    }
+
+    // Hold the message back until the user reviews the flagged content.
+    setPendingReview({
+      original: text,
+      suggestion: filterResult.message,
+      harassmentTypes: flaggedTypes,
+    });
+    setReviewText(filterResult.message);
+  };
+
+  const handleUseSuggestion = () => {
+    if (!pendingReview) return;
+    setReviewText(pendingReview.suggestion);
+  };
+
+  const handleCancelReview = () => {
+    setPendingReview(null);
+    setReviewText("");
+  };
+
+  const handleConfirmPost = async () => {
+    const finalText = reviewText.trim();
+    if (!finalText || isChecking) return;
+
+    // Re-check the edited text so flagged wording can't slip through unchanged.
+    setIsChecking(true);
+    let filterResult;
+    try {
+      filterResult = await FilterMessageController(finalText);
+    } catch (error) {
+      console.error("Harassment filter check failed", error);
+      setIsChecking(false);
+      return;
+    }
+    setIsChecking(false);
+
+    const flaggedTypes = (filterResult.harassmentTypes ?? []).filter(
+      (type) => type.toLowerCase() !== "none",
+    );
+
+    if (flaggedTypes.length > 0) {
+      setPendingReview({
+        original: finalText,
+        suggestion: filterResult.message,
+        harassmentTypes: flaggedTypes,
+      });
+      setReviewText(filterResult.message);
+      return;
+    }
+
+    postMessage(filterResult.message);
     setDraft("");
+    setPendingReview(null);
+    setReviewText("");
   };
 
   return (
@@ -148,15 +231,69 @@ function Chatroom({ username }: ChatroomProps) {
             placeholder="Send a message..."
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
+            disabled={isChecking || !!pendingReview}
           />
           <button
             type="submit"
             className="message-send"
-            disabled={!draft.trim()}
+            disabled={!draft.trim() || isChecking || !!pendingReview}
           >
-            Send
+            {isChecking ? "Checking..." : "Send"}
           </button>
         </form>
+
+        {pendingReview && (
+          <div className="review-overlay">
+            <div className="review-panel">
+              <h3 className="review-title">
+                This message may contain{" "}
+                {pendingReview.harassmentTypes
+                  .map(formatHarassmentType)
+                  .join(", ")}
+              </h3>
+              <p className="review-hint">
+                Your original message can't be posted as is. Use the suggested
+                version below or rewrite it yourself, then post again.
+              </p>
+
+              <textarea
+                className="review-textarea"
+                value={reviewText}
+                onChange={(event) => setReviewText(event.target.value)}
+                rows={3}
+              />
+
+              <div className="review-choices">
+                <button
+                  type="button"
+                  className="review-choice-btn"
+                  onClick={handleUseSuggestion}
+                  disabled={reviewText === pendingReview.suggestion}
+                >
+                  Reset to suggestion
+                </button>
+              </div>
+
+              <div className="review-actions">
+                <button
+                  type="button"
+                  className="review-cancel"
+                  onClick={handleCancelReview}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="review-post"
+                  disabled={!reviewText.trim() || isChecking}
+                  onClick={handleConfirmPost}
+                >
+                  {isChecking ? "Checking..." : "Post"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
