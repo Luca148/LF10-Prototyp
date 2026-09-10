@@ -1,11 +1,12 @@
-﻿using HarassmentFilter.Core.Services;
+﻿using System.Collections.Concurrent;
+using HarassmentFilter.Core.Services;
 using Microsoft.AspNetCore.SignalR;
 
 namespace LF10.Api.Hubs
 {
     public class ChatHub(IHarassmentFilterService filter) : Hub
     {
-        private static readonly Dictionary<string, (int chatRoomId, string username)> _connectedUsers = new();
+        private static readonly ConcurrentDictionary<string, (int chatRoomId, string username)> _connectedUsers = new();
 
         public async Task JoinRoom(int chatRoomId, string username)
         {
@@ -18,7 +19,7 @@ namespace LF10.Api.Hubs
         {
             if (_connectedUsers.TryGetValue(Context.ConnectionId, out var info))
             {
-                _connectedUsers.Remove(Context.ConnectionId);
+                _connectedUsers.TryRemove(Context.ConnectionId, out _);
                 await BroadcastUserList(info.chatRoomId);
             }
 
