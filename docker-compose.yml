@@ -9,7 +9,7 @@ services:
       # Persists Data/User.json across restarts and redeploys.
       - backend-data:/app/Data
     expose:
-      - "9900"
+      - "8080"
 
   frontend:
     build:
@@ -18,9 +18,9 @@ services:
     depends_on:
       - backend
     # No published port: traffic comes in through the Cloudflare Tunnel.
-    # For direct LAN access add e.g.  ports: ["8080:80"]
+    # For direct LAN access on a free host port add e.g.  ports: ["9900:80"]
     expose:
-      - "99"
+      - "80"
 
   cloudflared:
     image: cloudflare/cloudflared:latest
