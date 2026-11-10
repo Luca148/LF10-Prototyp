@@ -1,5 +1,5 @@
 {
-  "HarassmentTypes": [
+  "HarassmentCategories": [
     {
       "Type": "None",
       "Words": {}
@@ -11,7 +11,6 @@
         "idiot": "genius",
         "moron": "smarty",
         "dumbass": "clever",
-        "retard": "brilliant",
         "stupid": "wise",
         "fatso": "fit",
         "ugly": "handsome",
@@ -31,7 +30,10 @@
         "nitwit": "genius",
         "blockhead": "smart",
         "doofus": "pro",
-        "scrub": "mvp"
+        "scrub": "mvp",
+        "hate": "love"
+
+
       },
       "Phrases": {
         "hate you": "love you"
@@ -44,7 +46,6 @@
         "jerk": "buddy",
         "bastard": "pal",
         "bitch": "buddy",
-        "dick": "dude",
         "prick": "mate",
         "scumbag": "legend",
         "dirtbag": "champ",
@@ -86,7 +87,6 @@
         "i will end you": "i will cheer for you",
         "you're dead": "you're awesome",
         "i'll beat you": "i'll high-five you",
-        "i'll find you": "i'll root for you",
         "watch your back": "have your back",
         "you're next": "you're the best",
         "i'm coming for you": "i'm rooting for you",
@@ -101,7 +101,6 @@
         "blow you up": "lift you up",
         "make you pay": "make you proud",
         "you'll regret this": "you'll be glad",
-        "i know where you live": "i know you're great",
         "sleep with one eye open": "sleep well",
         "you're finished": "you're winning",
         "game over": "level up",
@@ -145,8 +144,7 @@
         "negro": "person",
         "colored": "person"
       },
-      "Phrases": {
-      }
+      "Phrases": {}
     },
     {
       "Type": "Discrimination",
@@ -221,8 +219,7 @@
     },
     {
       "Type": "SexualHarassment",
-      "Words": {
-      },
+      "Words": {},
       "Phrases": {
         "send nudes": "send memes",
         "show me your tits": "show me your smile",
@@ -333,24 +330,13 @@
     {
       "Type": "Profanity",
       "Words": {
-        "fuck": "fudge",
         "shit": "shoot",
-        "ass": "butt",
-        "bitch": "beach",
         "damn": "darn",
         "hell": "heck",
         "crap": "crud",
         "piss": "pee",
-        "dick": "dude",
-        "cock": "rooster",
-        "pussy": "cat",
-        "cunt": "person",
-        "bastard": "buddy",
         "motherfucker": "friend",
-        "asshole": "buddy",
-        "shithead": "smarty",
         "dumbfuck": "clever",
-        "fuckface": "nice face",
         "fuckwit": "genius",
         "twat": "buddy",
         "wanker": "friend",
@@ -363,14 +349,12 @@
       },
       "Phrases": {
         "jesus christ": "wow",
-        "son of a bitch": "son of a gun",
-        "piece of shit": "piece of cake"
+        "son of a bitch": "son of a gun"
       }
     },
     {
       "Type": "Stalking",
-      "Words": {
-      },
+      "Words": {},
       "Phrases": {
         "i know where you live": "i know you're great",
         "i'm watching you": "i'm rooting for you",
@@ -406,9 +390,7 @@
     },
     {
       "Type": "PersonalAttack",
-      "Words": {
-
-      },
+      "Words": {},
       "Phrases": {
         "you're ugly": "you're attractive",
         "you're fat": "you're fit",
@@ -438,8 +420,7 @@
         "you're a fraud": "you're genuine",
         "you're talentless hack": "you're skilled pro",
         "you're a clown": "you're a star",
-        "you're irrelevant": "you're important",
-        "you're finished": "you're just starting"
+        "you're irrelevant": "you're important"
       }
     }
   ]
