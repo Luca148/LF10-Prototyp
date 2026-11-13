@@ -1,13 +1,13 @@
-﻿using HarassmentFilter.Core.Services;
+﻿using HarassmentFilter.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LF10.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class MessagesController(IHarassmentFilterService filter) : ControllerBase
+    public class MessagesController(IFilterService filter) : ControllerBase
     {
-        private readonly IHarassmentFilterService _filter = filter;
+        private readonly IFilterService _filter = filter;
 
         [HttpPost("filter")]
         public IActionResult Filter(

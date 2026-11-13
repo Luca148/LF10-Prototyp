@@ -1,9 +1,9 @@
-﻿using HarassmentFilter.Core.Services;
+﻿using HarassmentFilter.Core.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
 namespace LF10.Api.Hubs
 {
-    public class ChatHub(IHarassmentFilterService filter) : Hub
+    public class ChatHub(IFilterService filter) : Hub
     {
         public async Task SendMessage(int chatRoomId, string content)
         {

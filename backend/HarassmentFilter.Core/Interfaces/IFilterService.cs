@@ -1,8 +1,8 @@
 ﻿using HarassmentFilter.Core.Models;
 
-namespace HarassmentFilter.Core.Services;
+namespace HarassmentFilter.Core.Interfaces;
 
-public interface IHarassmentFilterService
+public interface IFilterService
 {
     FilterResult FilterMessage(string message);
 }

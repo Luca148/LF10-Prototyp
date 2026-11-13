@@ -1,9 +1,10 @@
 ﻿using System.Text.RegularExpressions;
+using HarassmentFilter.Core.Interfaces;
 using HarassmentFilter.Core.Models;
 
 namespace HarassmentFilter.Core.Services;
 
-public class HarassmentFilterService(HarassmentFilterConfiguration configuration) : IHarassmentFilterService
+public class HarassmentFilterService(HarassmentFilterConfiguration configuration) : IFilterService
 {
     private FilterResult emptyResult = new()
     {
