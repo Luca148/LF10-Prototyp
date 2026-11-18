@@ -23,7 +23,7 @@ public class HarassmentFilterService(HarassmentFilterConfiguration configuration
             return emptyResult;
         }
 
-        var result = message.ToLower();
+        var result = message;
 
         // Phrases first, otherwise a word inside a phrase (e.g. "kill" in "kill you")
         // gets replaced first and the phrase can no longer match.
