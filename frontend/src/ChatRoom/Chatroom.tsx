@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import "./Chatroom.css";
 import UserComponent, {
   getAvatarColor,
-  type UserStatus,
+  // type UserStatus,
 } from "../UserComponent/UserComponent";
 
 import { FilterMessageController } from "../Controllers/FilterController";
+import { HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 
 interface ChatMessage {
   id: number;
@@ -14,80 +15,181 @@ interface ChatMessage {
   timestamp: string;
 }
 
-interface OnlineUser {
-  username: string;
-  status: UserStatus;
-}
+// interface OnlineUser {
+//   username: string;
+//   status: UserStatus;
+// }
 
 interface ChatroomProps {
   username: string;
 }
 
-// Placeholder data until SignalR is wired up.
-const initialMessages: ChatMessage[] = [
-  {
-    id: 1,
-    username: "Maya",
-    text: "Hi folks! Welcome to General 👋",
-    timestamp: "10:24",
-  },
-  {
-    id: 2,
-    username: "Zed",
-    text: "Just joined the chat, hello everyone!",
-    timestamp: "10:26",
-  },
-  {
-    id: 3,
-    username: "Luna",
-    text: "Hey Zed, glad you're here 🙌",
-    timestamp: "10:28",
-  },
-];
+interface PendingReview {
+  original: string;
+  suggestion: string;
+  harassmentTypes: string[];
+}
 
-const onlineUsers: OnlineUser[] = [
-  { username: "Lukas", status: "online" },
-  { username: "Permata", status: "online" },
-  { username: "Jan-Luca", status: "online" },
-  { username: "Mariam", status: "offline" },
-  { username: "Kevin", status: "online" },
-  { username: "Veeti", status: "online" },
-];
+// const onlineUsers: OnlineUser[] = [
+//   { username: "Lukas", status: "online" },
+//   { username: "Permata", status: "online" },
+//   { username: "Jan-Luca", status: "online" },
+//   { username: "Mariam", status: "offline" },
+//   { username: "Kevin", status: "online" },
+//   { username: "Veeti", status: "online" },
+// ];
+
+// "SexualHarassment" -> "Sexual Harassment"
+const formatHarassmentType = (type: string) =>
+  type.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+// Built once when this module first loads, so React's Strict Mode double-render
+// never creates or races multiple connections.
+const connection = new HubConnectionBuilder().withUrl("/chathub").build();
 
 function Chatroom({ username }: ChatroomProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
+  const [isChecking, setIsChecking] = useState(false);
+  const [pendingReview, setPendingReview] = useState<PendingReview | null>(
+    null,
+  );
+  const [reviewText, setReviewText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
+  const messageInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isChecking && !pendingReview) {
+      messageInputRef.current?.focus();
+    }
+  }, [isChecking, pendingReview]);
+
+  useEffect(() => {
+    const handleReceiveMessage = (result: {
+      message: string;
+      timestamp: string;
+      username: string;
+    }) => {
+      const newMessage: ChatMessage = {
+        id: Date.now(),
+        username: result.username,
+        text: result.message,
+        timestamp: new Date(result.timestamp).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, newMessage]);
+    };
+
+    connection.on("ReceiveMessage", handleReceiveMessage);
+    connection.on("UserListUpdated", (users: string[]) => {
+      setConnectedUsers(users);
+    });
+
+    if (connection.state === HubConnectionState.Disconnected) {
+      connection
+        .start()
+        .then(() => connection.invoke("JoinRoom", 1, username))
+        .catch((error) => console.error(error));
+    }
+
+    return () => {
+      connection.off("ReceiveMessage", handleReceiveMessage);
+      connection.off("UserListUpdated");
+    };
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const postMessage = (text: string) => {
+    connection.invoke("SendMessage", 1, text, username).catch((error) => {
+      console.error(error);
+    });
+  };
+
   const handleSend = async (event: React.FormEvent) => {
     event.preventDefault();
     const text = draft.trim();
-    if (!text) return;
+    if (!text || isChecking) return;
 
+    setIsChecking(true);
     let filterResult;
     try {
       filterResult = await FilterMessageController(text);
     } catch (error) {
       console.error("Harassment filter check failed", error);
+      setIsChecking(false);
+      return;
+    }
+    setIsChecking(false);
+
+    const flaggedTypes = (filterResult.harassmentTypes ?? []).filter(
+      (type) => type.toLowerCase() !== "none",
+    );
+
+    if (flaggedTypes.length === 0) {
+      postMessage(filterResult.message);
+      setDraft("");
       return;
     }
 
-    const newMessage: ChatMessage = {
-      id: Date.now(),
-      username,
-      text: filterResult.message,
-      timestamp: new Date(filterResult.timestamp).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
+    // Hold the message back until the user reviews the flagged content.
+    setPendingReview({
+      original: text,
+      suggestion: filterResult.message,
+      harassmentTypes: flaggedTypes,
+    });
+    setReviewText(filterResult.message);
+  };
 
-    setMessages((previous) => [...previous, newMessage]);
+  const handleUseSuggestion = () => {
+    if (!pendingReview) return;
+    setReviewText(pendingReview.suggestion);
+  };
+
+  const handleCancelReview = () => {
+    setPendingReview(null);
+    setReviewText("");
+  };
+
+  const handleConfirmPost = async () => {
+    const finalText = reviewText.trim();
+    if (!finalText || isChecking) return;
+
+    // Re-check the edited text so flagged wording can't slip through unchanged.
+    setIsChecking(true);
+    let filterResult;
+    try {
+      filterResult = await FilterMessageController(finalText);
+    } catch (error) {
+      console.error("Harassment filter check failed", error);
+      setIsChecking(false);
+      return;
+    }
+    setIsChecking(false);
+
+    const flaggedTypes = (filterResult.harassmentTypes ?? []).filter(
+      (type) => type.toLowerCase() !== "none",
+    );
+
+    if (flaggedTypes.length > 0) {
+      setPendingReview({
+        original: finalText,
+        suggestion: filterResult.message,
+        harassmentTypes: flaggedTypes,
+      });
+      setReviewText(filterResult.message);
+      return;
+    }
+
+    postMessage(filterResult.message);
     setDraft("");
+    setPendingReview(null);
+    setReviewText("");
   };
 
   return (
@@ -100,13 +202,11 @@ function Chatroom({ username }: ChatroomProps) {
 
         <div className="online-list">
           <span className="online-list-title">Online Now</span>
-          {onlineUsers.map((user) => (
-            <UserComponent
-              key={user.username}
-              username={user.username}
-              status={user.status}
-            />
-          ))}
+          {connectedUsers
+            .filter((user) => user !== username)
+            .map((user) => (
+              <UserComponent key={user} username={user} status={"online"} />
+            ))}
         </div>
 
         <div className="current-user">
@@ -148,15 +248,70 @@ function Chatroom({ username }: ChatroomProps) {
             placeholder="Send a message..."
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
+            disabled={isChecking || !!pendingReview}
+            ref={messageInputRef}
           />
           <button
             type="submit"
             className="message-send"
-            disabled={!draft.trim()}
+            disabled={!draft.trim() || isChecking || !!pendingReview}
           >
-            Send
+            {isChecking ? "Checking..." : "Send"}
           </button>
         </form>
+
+        {pendingReview && (
+          <div className="review-overlay">
+            <div className="review-panel">
+              <h3 className="review-title">
+                This message may contain{" "}
+                {pendingReview.harassmentTypes
+                  .map(formatHarassmentType)
+                  .join(", ")}
+              </h3>
+              <p className="review-hint">
+                Your original message can't be posted as is. Use the suggested
+                version below or rewrite it yourself, then post again.
+              </p>
+
+              <textarea
+                className="review-textarea"
+                value={reviewText}
+                onChange={(event) => setReviewText(event.target.value)}
+                rows={3}
+              />
+
+              <div className="review-choices">
+                <button
+                  type="button"
+                  className="review-choice-btn"
+                  onClick={handleUseSuggestion}
+                  disabled={reviewText === pendingReview.suggestion}
+                >
+                  Reset to suggestion
+                </button>
+              </div>
+
+              <div className="review-actions">
+                <button
+                  type="button"
+                  className="review-cancel"
+                  onClick={handleCancelReview}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="review-post"
+                  disabled={!reviewText.trim() || isChecking}
+                  onClick={handleConfirmPost}
+                >
+                  {isChecking ? "Checking..." : "Post"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
