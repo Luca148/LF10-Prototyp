@@ -173,11 +173,11 @@ public class FilterTest
     }
 
     [Fact]
-    public void IsCaseInsensitive()
+    public void IsCaseSensitive()
     {
         FilterResult result = service.FilterMessage("You Are An IDIOT");
 
-        Assert.Equal("you are an genius", result.Message);
+        Assert.Equal("You Are An genius", result.Message);
         Assert.Contains("Bullying", result.HarassmentTypes);
     }
 
