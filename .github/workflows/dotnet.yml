@@ -5,8 +5,9 @@ name: HugYou Unit Test
 
 on:
   push:
-    branches: [ "Backend" ]
+    branches: [ "Main" ]
   pull_request:
+    branches: [ "Main" ]
 
 jobs:
   build:
