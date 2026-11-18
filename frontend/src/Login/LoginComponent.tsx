@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./LoginComponent.css";
+import hugLogo from "/hug.png";
 
 interface LoginComponentProps {
   onLogin: (username: string) => void;
@@ -18,6 +19,11 @@ function LoginComponent({ onLogin }: LoginComponentProps) {
 
   return (
     <div className="login-page">
+      <div className="login-brand">
+        <img src={hugLogo} alt="Hug you! logo" className="login-logo" />
+        <span className="login-brand-name">HugYou!</span>
+      </div>
+
       <form className="login-card" onSubmit={handleSubmit}>
         <h1 className="login-title">Welcome</h1>
         <p className="login-subtitle">Enter a username to join the chatroom</p>
