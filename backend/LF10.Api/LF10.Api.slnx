@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="../HarassmentFilter.Core/HarassmentFilter.Core.csproj" />
+  <Project Path="../HarassmentFilter.Test/HarassmentFilter.Test.csproj" Id="05d4fabf-385a-448e-91d6-bd5de18304ef" />
   <Project Path="LF10.Api.csproj" />
 </Solution>

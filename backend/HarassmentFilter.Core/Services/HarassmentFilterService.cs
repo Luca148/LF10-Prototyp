@@ -1,9 +1,10 @@
 ﻿using System.Text.RegularExpressions;
+using HarassmentFilter.Core.Interfaces;
 using HarassmentFilter.Core.Models;
 
 namespace HarassmentFilter.Core.Services;
 
-public class HarassmentFilterService(HarassmentFilterConfiguration configuration) : IHarassmentFilterService
+public class HarassmentFilterService(HarassmentFilterConfiguration configuration) : IFilterService
 {
     private FilterResult emptyResult = new()
     {
@@ -22,45 +23,12 @@ public class HarassmentFilterService(HarassmentFilterConfiguration configuration
             return emptyResult;
         }
 
-        var result = message.ToLower();
+        var result = message;
 
-        foreach (var harassmentType in configuration.HarassmentCategories)
-        {
-            foreach (var phrase in harassmentType.Phrases)
-            {
-                var pattern = $@"\b{Regex.Escape(phrase.Key)}(es|s|ed|ing|d|er|est)?\b";
-
-                if (Regex.IsMatch(result, pattern, RegexOptions.IgnoreCase))
-                {
-                    harassmentTypes.Add(harassmentType.Type);
-
-                    result = Regex.Replace(
-                        result,
-                        pattern,
-                        m => phrase.Value + m.Groups[1].Value,
-                        RegexOptions.IgnoreCase);
-                }
-            }
-        }
-
-        foreach (var harassmentType in configuration.HarassmentCategories)
-        {
-            foreach (var word in harassmentType.Words)
-            {
-                var pattern = $@"\b{Regex.Escape(word.Key)}(es|s|ed|ing|d|er|est)?\b";
-
-                if (Regex.IsMatch(result, pattern, RegexOptions.IgnoreCase))
-                {
-                    harassmentTypes.Add(harassmentType.Type);
-
-                    result = Regex.Replace(
-                        result,
-                        pattern,
-                        m => word.Value + m.Groups[1].Value,
-                        RegexOptions.IgnoreCase);
-                }
-            }
-        }
+        // Phrases first, otherwise a word inside a phrase (e.g. "kill" in "kill you")
+        // gets replaced first and the phrase can no longer match.
+        result = ReplaceEntries(result, category => category.Phrases, harassmentTypes);
+        result = ReplaceEntries(result, category => category.Words, harassmentTypes);
 
         harassmentTypes = [.. harassmentTypes.Distinct()];
 
@@ -71,5 +39,32 @@ public class HarassmentFilterService(HarassmentFilterConfiguration configuration
         response.Timestamp = DateTime.Now;
 
         return response;
+    }
+
+    private string ReplaceEntries(
+        string text,
+        Func<HarassmentCategory, Dictionary<string, string>> selectEntries,
+        List<string> foundTypes)
+    {
+        foreach (var category in configuration.HarassmentCategories)
+        {
+            foreach (var entry in selectEntries(category))
+            {
+                var pattern = $@"\b{Regex.Escape(entry.Key)}(s|ed|ing|d|er|est)?\b";
+
+                if (Regex.IsMatch(text, pattern, RegexOptions.IgnoreCase))
+                {
+                    foundTypes.Add(category.Type);
+
+                    text = Regex.Replace(
+                        text,
+                        pattern,
+                        m => entry.Value + m.Groups[1].Value,
+                        RegexOptions.IgnoreCase);
+                }
+            }
+        }
+
+        return text;
     }
 }

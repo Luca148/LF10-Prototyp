@@ -1,4 +1,5 @@
 using System.Text.Json;
+using HarassmentFilter.Core.Interfaces;
 using HarassmentFilter.Core.Models;
 using HarassmentFilter.Core.Services;
 using LF10.Api.Hubs;
@@ -16,7 +17,7 @@ var configuration =
         json);
 
 // Add services to the container.
-builder.Services.AddSingleton<IHarassmentFilterService>(
+builder.Services.AddSingleton<IFilterService>(
     _ => new HarassmentFilterService(configuration));
 
 builder.Services.AddControllers();
