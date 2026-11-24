@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import "./Chatroom.css";
-import UserComponent, { getAvatarColor } from "../UserComponent/UserComponent";
+import { getAvatarColor } from "../UserComponent/UserComponent";
 
 import { FilterMessageController } from "../Controllers/FilterController";
 import { HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 import ReviewComponent from "../ReviewComponent/ReviewComponent.tsx";
+import UsersOnlineComponent from "../UsersOnlineComponent/UsersOnlineComponent.tsx";
 interface ChatMessage {
   id: number;
   username: string;
@@ -173,26 +174,11 @@ function Chatroom({ username }: ChatroomProps) {
 
   return (
     <div className="chatroom">
-      <aside className="chatroom-sidebar">
-        <div className="channel-header">
-          <span className="channel-hash">#</span>
-          <span className="channel-name">general</span>
-        </div>
-
-        <div className="online-list">
-          <span className="online-list-title">Online Now</span>
-          {connectedUsers
-            .filter((user) => user !== username)
-            .map((user) => (
-              <UserComponent key={user} username={user} status={"online"} />
-            ))}
-        </div>
-
-        <div className="current-user">
-          <UserComponent username={username} status="online" />
-        </div>
-      </aside>
-
+      <UsersOnlineComponent
+        channelName={"general"}
+        connectedUsers={connectedUsers}
+        username={username}
+      />
       <main className="chatroom-main">
         <header className="chatroom-header">
           <span className="channel-hash">#</span>
