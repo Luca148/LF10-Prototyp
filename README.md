@@ -15,6 +15,7 @@ A real-time chat app with a built-in harassment filter — messages are checked 
 | ------------- | -------------------------------- |
 | **Frontend**  | React 19 · TypeScript · Vite     |
 | **Backend**   | ASP.NET Core (.NET 10) · SignalR |
+| **Database**  | MySQL 8.4 · EF Core              |
 | **Real-time** | WebSockets via SignalR Hub       |
 
 ## 📁 Project Structure
@@ -22,20 +23,43 @@ A real-time chat app with a built-in harassment filter — messages are checked 
 ```
 frontend/   React + Vite client
 backend/
-  LF10.Api/               ASP.NET Core Web API + SignalR hub
-  HarassmentFilter.Core/  Shared filtering logic & word lists
+  LF10.Api/               ASP.NET Core Web API + SignalR hub (connects frontend and backend)
+  HarassmentFilter.Core/  Filtering logic, loads its words from LF10.Data
+  LF10.Data/              Database: DbContext, tables (Entities/), EF Core migrations
 ```
 
 ## 🚀 Getting Started
 
 ### Backend
 
+The backend needs a MySQL server. The connection string is in
+`backend/LF10.Api/appsettings.json` (database/user/password `hugyou` on
+`localhost:3306`). The quickest way to get a matching server is Docker:
+
+```bash
+docker run -d --name hugyou-db -p 3306:3306 \
+  -e MYSQL_DATABASE=hugyou -e MYSQL_USER=hugyou -e MYSQL_PASSWORD=hugyou \
+  -e MYSQL_ROOT_PASSWORD=root mysql:8.4
+```
+
+Then:
+
 ```bash
 cd backend/LF10.Api
 dotnet run
 ```
 
-Runs on `https://localhost:7255`.
+Runs on `https://localhost:7255`. On startup it creates the tables and fills in
+the filter rules if the database is still empty.
+
+The tests (`dotnet test LF10.Api.slnx`) don't need MySQL.
+
+To change the database schema, edit the entities in `LF10.Data/Entities/` and add a
+migration (`dotnet tool restore` once, then from `backend/`):
+
+```bash
+dotnet ef migrations add <Name> --project LF10.Data --startup-project LF10.Api --output-dir Migrations
+```
 
 ### Frontend
 
