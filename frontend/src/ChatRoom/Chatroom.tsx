@@ -1,24 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import "./Chatroom.css";
-import UserComponent, {
-  getAvatarColor,
-  // type UserStatus,
-} from "../UserComponent/UserComponent";
+import UserComponent, { getAvatarColor } from "../UserComponent/UserComponent";
 
 import { FilterMessageController } from "../Controllers/FilterController";
 import { HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
-
+import ReviewComponent from "../ReviewComponent/ReviewComponent.tsx";
 interface ChatMessage {
   id: number;
   username: string;
   text: string;
   timestamp: string;
 }
-
-// interface OnlineUser {
-//   username: string;
-//   status: UserStatus;
-// }
 
 interface ChatroomProps {
   username: string;
@@ -29,19 +21,6 @@ interface PendingReview {
   suggestion: string;
   harassmentTypes: string[];
 }
-
-// const onlineUsers: OnlineUser[] = [
-//   { username: "Lukas", status: "online" },
-//   { username: "Permata", status: "online" },
-//   { username: "Jan-Luca", status: "online" },
-//   { username: "Mariam", status: "offline" },
-//   { username: "Kevin", status: "online" },
-//   { username: "Veeti", status: "online" },
-// ];
-
-// "SexualHarassment" -> "Sexual Harassment"
-const formatHarassmentType = (type: string) =>
-  type.replace(/([a-z])([A-Z])/g, "$1 $2");
 
 // Built once when this module first loads, so React's Strict Mode double-render
 // never creates or races multiple connections.
@@ -261,56 +240,15 @@ function Chatroom({ username }: ChatroomProps) {
         </form>
 
         {pendingReview && (
-          <div className="review-overlay">
-            <div className="review-panel">
-              <h3 className="review-title">
-                This message may contain{" "}
-                {pendingReview.harassmentTypes
-                  .map(formatHarassmentType)
-                  .join(", ")}
-              </h3>
-              <p className="review-hint">
-                Your original message can't be posted as is. Use the suggested
-                version below or rewrite it yourself, then post again.
-              </p>
-
-              <textarea
-                className="review-textarea"
-                value={reviewText}
-                onChange={(event) => setReviewText(event.target.value)}
-                rows={3}
-              />
-
-              <div className="review-choices">
-                <button
-                  type="button"
-                  className="review-choice-btn"
-                  onClick={handleUseSuggestion}
-                  disabled={reviewText === pendingReview.suggestion}
-                >
-                  Reset to suggestion
-                </button>
-              </div>
-
-              <div className="review-actions">
-                <button
-                  type="button"
-                  className="review-cancel"
-                  onClick={handleCancelReview}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="review-post"
-                  disabled={!reviewText.trim() || isChecking}
-                  onClick={handleConfirmPost}
-                >
-                  {isChecking ? "Checking..." : "Post"}
-                </button>
-              </div>
-            </div>
-          </div>
+          <ReviewComponent
+            pendingReview={pendingReview}
+            reviewText={reviewText}
+            isChecking={isChecking}
+            setReviewText={setReviewText}
+            handleUseSuggestion={handleUseSuggestion}
+            handleCancelReview={handleCancelReview}
+            handleConfirmPost={handleConfirmPost}
+          />
         )}
       </main>
     </div>
