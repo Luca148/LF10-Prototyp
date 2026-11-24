@@ -6,6 +6,8 @@ import { FilterMessageController } from "../Controllers/FilterController";
 import { HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
 import ReviewComponent from "../ReviewComponent/ReviewComponent.tsx";
 import UsersOnlineComponent from "../UsersOnlineComponent/UsersOnlineComponent.tsx";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEllipsis } from "@fortawesome/free-solid-svg-icons";
 interface ChatMessage {
   id: number;
   username: string;
@@ -28,6 +30,7 @@ interface PendingReview {
 const connection = new HubConnectionBuilder().withUrl("/chathub").build();
 
 function Chatroom({ username }: ChatroomProps) {
+  const channelName = "general";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [isChecking, setIsChecking] = useState(false);
@@ -38,7 +41,9 @@ function Chatroom({ username }: ChatroomProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
   const messageInputRef = useRef<HTMLInputElement>(null);
-
+  const [selectedMessageId, setSelectedMessageId] = useState<number | null>(
+    null,
+  );
   useEffect(() => {
     if (!isChecking && !pendingReview) {
       messageInputRef.current?.focus();
@@ -175,14 +180,14 @@ function Chatroom({ username }: ChatroomProps) {
   return (
     <div className="chatroom">
       <UsersOnlineComponent
-        channelName={"general"}
+        channelName={channelName}
         connectedUsers={connectedUsers}
         username={username}
       />
       <main className="chatroom-main">
         <header className="chatroom-header">
           <span className="channel-hash">#</span>
-          <span className="channel-name">general</span>
+          <span className="channel-name">{channelName}</span>
         </header>
 
         <div className="message-list">
@@ -190,7 +195,16 @@ function Chatroom({ username }: ChatroomProps) {
             <div className="message" key={message.id}>
               <div
                 className="message-avatar"
-                style={{ background: getAvatarColor(message.username) }}
+                style={{
+                  background: getAvatarColor(message.username),
+                }}
+                onClick={() => {
+                  console.log(
+                    message.username,
+                    message.timestamp,
+                    message.text,
+                  );
+                }}
               >
                 {message.username.charAt(0).toUpperCase()}
               </div>
@@ -198,7 +212,41 @@ function Chatroom({ username }: ChatroomProps) {
                 <div className="message-meta">
                   <span className="message-author">{message.username}</span>
                   <span className="message-time">{message.timestamp}</span>
+                  <button
+                    type="button"
+                    aria-label="Message options"
+                    style={{
+                      backgroundColor: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                    onClick={() =>
+                      setSelectedMessageId((current) =>
+                        current === message.id ? null : message.id,
+                      )
+                    }
+                  >
+                    <FontAwesomeIcon icon={faEllipsis} />
+                  </button>
+
+                  {selectedMessageId == message.id && (
+                    <div
+                      style={{
+                        fontSize: "12px",
+                        padding: "0px 10px 0px 10px",
+                        borderRadius: "100px",
+                        backgroundColor: "#334155",
+                        cursor: "pointer",
+                      }}
+                      onClick={() => {
+                        console.log(message.id, message.text, message.username);
+                      }}
+                    >
+                      <span>Report Message</span>
+                    </div>
+                  )}
                 </div>
+
                 <p className="message-text">{message.text}</p>
               </div>
             </div>
