@@ -60,7 +60,7 @@ Chat messages are not persisted. The client supplies the username and room ID; t
 
 ## Project screenshots
 
-- Chat interface and message-review flow: [Insert screenshot]
+- Chat interface and message-review flow: (/images/message review.png)
 - Message-report dialog: [Insert screenshot]
 - Swagger UI at `/swagger` in Development: [Insert screenshot]
 - Successful backend and end-to-end Actions runs: [Insert screenshot]
