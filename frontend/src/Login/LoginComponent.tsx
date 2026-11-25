@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./LoginComponent.css";
 import hugLogo from "/hug.png";
+import { FilterMessageController } from "../Controllers/FilterController";
 
 interface LoginComponentProps {
   onLogin: (username: string) => void;
@@ -8,14 +9,29 @@ interface LoginComponentProps {
 
 function LoginComponent({ onLogin }: LoginComponentProps) {
   const [username, setUsername] = useState("");
-
-  const handleSubmit = (event: React.FormEvent) => {
+  const [isHarassment, setIsHarassment] = useState(true);
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const trimmed = username.trim();
-    if (trimmed) {
-      onLogin(trimmed);
+    let filteredName;
+
+    try {
+      filteredName = await FilterMessageController(trimmed);
+      if (!filteredName.harassmentTypes.includes("None")) {
+        setIsHarassment(true);
+        console.log("Harassment detected");
+      } else {
+        setIsHarassment(false);
+        onLogin(trimmed);
+      }
+    } catch (error) {
+      console.error(error);
     }
   };
+
+  useEffect(() => {
+    setIsHarassment(false);
+  }, [username]);
 
   return (
     <div className="login-page">
@@ -36,11 +52,11 @@ function LoginComponent({ onLogin }: LoginComponentProps) {
           onChange={(event) => setUsername(event.target.value)}
           autoFocus
         />
-
+        {isHarassment && <p className="login-error">Username not allowed</p>}
         <button
           type="submit"
           className="login-button"
-          disabled={!username.trim()}
+          disabled={!username.trim() || isHarassment}
         >
           Enter the chatroom
         </button>

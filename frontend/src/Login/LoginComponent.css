@@ -112,3 +112,8 @@
   cursor: not-allowed;
   box-shadow: none;
 }
+
+.login-error {
+  color: #f87171;
+  text-align: center;
+}

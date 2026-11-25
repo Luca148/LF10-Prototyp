@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using HarassmentFilter.Core.Interfaces;
 using Microsoft.AspNetCore.SignalR;
+using System.Collections.Concurrent;
 
 namespace LF10.Api.Hubs
 {
@@ -15,7 +16,7 @@ namespace LF10.Api.Hubs
             await BroadcastUserList(chatRoomId);
         }
 
-        public override async Task OnDisconnectedAsync(Exception? exception)
+        public override async Task OnDisconnectedAsync(Exception exception)
         {
             if (_connectedUsers.TryGetValue(Context.ConnectionId, out var info))
             {

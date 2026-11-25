@@ -1,24 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import "./Chatroom.css";
-import UserComponent, {
-  getAvatarColor,
-  // type UserStatus,
-} from "../UserComponent/UserComponent";
+import { getAvatarColor } from "../UserComponent/UserComponent";
 
 import { FilterMessageController } from "../Controllers/FilterController";
 import { HubConnectionBuilder, HubConnectionState } from "@microsoft/signalr";
-
+import ReviewComponent from "../ReviewComponent/ReviewComponent.tsx";
+import UsersOnlineComponent from "../UsersOnlineComponent/UsersOnlineComponent.tsx";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEllipsis } from "@fortawesome/free-solid-svg-icons";
+import ReportingComponent from "../ReportingComponent/ReportingComponent.tsx";
 interface ChatMessage {
   id: number;
   username: string;
   text: string;
   timestamp: string;
 }
-
-// interface OnlineUser {
-//   username: string;
-//   status: UserStatus;
-// }
 
 interface ChatroomProps {
   username: string;
@@ -30,24 +26,12 @@ interface PendingReview {
   harassmentTypes: string[];
 }
 
-// const onlineUsers: OnlineUser[] = [
-//   { username: "Lukas", status: "online" },
-//   { username: "Permata", status: "online" },
-//   { username: "Jan-Luca", status: "online" },
-//   { username: "Mariam", status: "offline" },
-//   { username: "Kevin", status: "online" },
-//   { username: "Veeti", status: "online" },
-// ];
-
-// "SexualHarassment" -> "Sexual Harassment"
-const formatHarassmentType = (type: string) =>
-  type.replace(/([a-z])([A-Z])/g, "$1 $2");
-
 // Built once when this module first loads, so React's Strict Mode double-render
 // never creates or races multiple connections.
 const connection = new HubConnectionBuilder().withUrl("/chathub").build();
 
 function Chatroom({ username }: ChatroomProps) {
+  const channelName = "general";
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [isChecking, setIsChecking] = useState(false);
@@ -58,7 +42,9 @@ function Chatroom({ username }: ChatroomProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
   const messageInputRef = useRef<HTMLInputElement>(null);
-
+  const [selectedMessageId, setSelectedMessageId] = useState<number | null>(
+    null,
+  );
   useEffect(() => {
     if (!isChecking && !pendingReview) {
       messageInputRef.current?.focus();
@@ -194,30 +180,15 @@ function Chatroom({ username }: ChatroomProps) {
 
   return (
     <div className="chatroom">
-      <aside className="chatroom-sidebar">
-        <div className="channel-header">
-          <span className="channel-hash">#</span>
-          <span className="channel-name">general</span>
-        </div>
-
-        <div className="online-list">
-          <span className="online-list-title">Online Now</span>
-          {connectedUsers
-            .filter((user) => user !== username)
-            .map((user) => (
-              <UserComponent key={user} username={user} status={"online"} />
-            ))}
-        </div>
-
-        <div className="current-user">
-          <UserComponent username={username} status="online" />
-        </div>
-      </aside>
-
+      <UsersOnlineComponent
+        channelName={channelName}
+        connectedUsers={connectedUsers}
+        username={username}
+      />
       <main className="chatroom-main">
         <header className="chatroom-header">
           <span className="channel-hash">#</span>
-          <span className="channel-name">general</span>
+          <span className="channel-name">{channelName}</span>
         </header>
 
         <div className="message-list">
@@ -225,7 +196,16 @@ function Chatroom({ username }: ChatroomProps) {
             <div className="message" key={message.id}>
               <div
                 className="message-avatar"
-                style={{ background: getAvatarColor(message.username) }}
+                style={{
+                  background: getAvatarColor(message.username),
+                }}
+                onClick={() => {
+                  console.log(
+                    message.username,
+                    message.timestamp,
+                    message.text,
+                  );
+                }}
               >
                 {message.username.charAt(0).toUpperCase()}
               </div>
@@ -233,7 +213,31 @@ function Chatroom({ username }: ChatroomProps) {
                 <div className="message-meta">
                   <span className="message-author">{message.username}</span>
                   <span className="message-time">{message.timestamp}</span>
+                  <button
+                    type="button"
+                    aria-label="Message options"
+                    style={{
+                      backgroundColor: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                    onClick={() =>
+                      setSelectedMessageId((current) =>
+                        current === message.id ? null : message.id,
+                      )
+                    }
+                  >
+                    <FontAwesomeIcon icon={faEllipsis} />
+                  </button>
+
+                  {selectedMessageId == message.id && (
+                    <ReportingComponent
+                      message={message}
+                      reporterUsername={username}
+                    />
+                  )}
                 </div>
+
                 <p className="message-text">{message.text}</p>
               </div>
             </div>
@@ -261,56 +265,15 @@ function Chatroom({ username }: ChatroomProps) {
         </form>
 
         {pendingReview && (
-          <div className="review-overlay">
-            <div className="review-panel">
-              <h3 className="review-title">
-                This message may contain{" "}
-                {pendingReview.harassmentTypes
-                  .map(formatHarassmentType)
-                  .join(", ")}
-              </h3>
-              <p className="review-hint">
-                Your original message can't be posted as is. Use the suggested
-                version below or rewrite it yourself, then post again.
-              </p>
-
-              <textarea
-                className="review-textarea"
-                value={reviewText}
-                onChange={(event) => setReviewText(event.target.value)}
-                rows={3}
-              />
-
-              <div className="review-choices">
-                <button
-                  type="button"
-                  className="review-choice-btn"
-                  onClick={handleUseSuggestion}
-                  disabled={reviewText === pendingReview.suggestion}
-                >
-                  Reset to suggestion
-                </button>
-              </div>
-
-              <div className="review-actions">
-                <button
-                  type="button"
-                  className="review-cancel"
-                  onClick={handleCancelReview}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="review-post"
-                  disabled={!reviewText.trim() || isChecking}
-                  onClick={handleConfirmPost}
-                >
-                  {isChecking ? "Checking..." : "Post"}
-                </button>
-              </div>
-            </div>
-          </div>
+          <ReviewComponent
+            pendingReview={pendingReview}
+            reviewText={reviewText}
+            isChecking={isChecking}
+            setReviewText={setReviewText}
+            handleUseSuggestion={handleUseSuggestion}
+            handleCancelReview={handleCancelReview}
+            handleConfirmPost={handleConfirmPost}
+          />
         )}
       </main>
     </div>
