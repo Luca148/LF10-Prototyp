@@ -8,6 +8,7 @@ import ReviewComponent from "../ReviewComponent/ReviewComponent.tsx";
 import UsersOnlineComponent from "../UsersOnlineComponent/UsersOnlineComponent.tsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsis } from "@fortawesome/free-solid-svg-icons";
+import ReportingComponent from "../ReportingComponent/ReportingComponent.tsx";
 interface ChatMessage {
   id: number;
   username: string;
@@ -230,20 +231,10 @@ function Chatroom({ username }: ChatroomProps) {
                   </button>
 
                   {selectedMessageId == message.id && (
-                    <div
-                      style={{
-                        fontSize: "12px",
-                        padding: "0px 10px 0px 10px",
-                        borderRadius: "100px",
-                        backgroundColor: "#334155",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => {
-                        console.log(message.id, message.text, message.username);
-                      }}
-                    >
-                      <span>Report Message</span>
-                    </div>
+                    <ReportingComponent
+                      message={message}
+                      reporterUsername={username}
+                    />
                   )}
                 </div>
 
