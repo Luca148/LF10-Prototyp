@@ -26,6 +26,7 @@ backend/
   LF10.Api/               ASP.NET Core Web API + SignalR hub (connects frontend and backend)
   HarassmentFilter.Core/  Filtering logic, loads its words from LF10.Data
   LF10.Data/              Database: DbContext, tables (Entities/), EF Core migrations
+e2e/        Playwright end-to-end tests (frontend + backend + MySQL)
 ```
 
 ## 🚀 Getting Started
@@ -70,6 +71,23 @@ npm run dev
 ```
 
 Runs on `http://localhost:5173` — proxies API calls and the SignalR connection to the backend automatically.
+
+### E2E Tests
+
+Playwright tests in `e2e/` drive the real app in a browser: login, posting, the
+review panel and two users chatting. They need the MySQL server from above;
+Playwright starts the backend (`dotnet run`) and the frontend (`npm run dev`) itself,
+or reuses them if they are already running.
+
+```bash
+cd e2e
+npm install
+npx playwright install chromium   # once
+npm test                          # or: npm run test:ui
+```
+
+They also run on GitHub Actions (`.github/workflows/e2e.yml`) for pushes to
+`main`/`Backend` and for pull requests.
 
 ## 💬 How It Works
 
