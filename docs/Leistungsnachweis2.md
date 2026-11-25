@@ -60,9 +60,23 @@ Chat messages are not persisted. The client supplies the username and room ID; t
 
 ## Project screenshots
 
-- Chat interface and message-review flow: (/images/message review.png)
-- Message-report dialog: [Insert screenshot]
-- Swagger UI at `/swagger` in Development: [Insert screenshot]
-- Successful backend and end-to-end Actions runs: [Insert screenshot]
+### Message review flow
 
-Screenshots to be supplied by the project team; personal information should be hidden.
+![Chat message being reviewed](images/message%20review.png)
+
+### Reporting a message
+
+![Report message dialog](images/reporting%20window.png)
+
+### API documentation
+
+![Swagger UI](images/swagger.png)
+
+### End-to-end test run
+
+![Successful end-to-end test run](images/e2e.png)
+
+### Refactoring example
+
+![Refactored code example](images/refactoring%20double%20code.png)
+
