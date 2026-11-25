@@ -15,6 +15,7 @@ export const FilterMessageController = async (
   });
 
   if (!response.ok) {
+    // A failed check must be handled as an error, not as a clean message.
     throw new Error(`Request failed: ${response.status}`);
   }
 

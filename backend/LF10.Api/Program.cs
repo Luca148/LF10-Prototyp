@@ -6,6 +6,7 @@ using LF10.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+// DB + Filter früh registrieren, damit die API direkt startklar ist.
 builder.Services.AddDatabase(builder.Configuration.GetConnectionString("Default"));
 builder.Services.AddHarassmentFilter();
 

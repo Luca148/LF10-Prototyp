@@ -20,6 +20,7 @@ export default function UsersOnlineComponent({
 
       <div className="online-list">
         <span className="online-list-title">Online Now</span>
+        {/* The current user is shown separately at the bottom of the sidebar. */}
         {connectedUsers
           .filter((user) => user !== username)
           .map((user) => (

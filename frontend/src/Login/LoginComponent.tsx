@@ -12,11 +12,13 @@ function LoginComponent({ onLogin }: LoginComponentProps) {
   const [isHarassment, setIsHarassment] = useState(true);
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    // Whitespace should not change how a username is checked or submitted.
     const trimmed = username.trim();
     let filteredName;
 
     try {
       filteredName = await FilterMessageController(trimmed);
+      // Only let the user join when the filter finds no harassment.
       if (!filteredName.harassmentTypes.includes("None")) {
         setIsHarassment(true);
         console.log("Harassment detected");
@@ -30,6 +32,7 @@ function LoginComponent({ onLogin }: LoginComponentProps) {
   };
 
   useEffect(() => {
+    // Clear the previous warning as soon as the username is edited.
     setIsHarassment(false);
   }, [username]);
 
