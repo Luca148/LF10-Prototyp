@@ -38,6 +38,7 @@ export default function ReportingWindow({
 
   useEffect(() => {
     const dialog = dialogRef.current;
+    // Use the browser's modal behavior and close it when this window is removed.
     dialog?.showModal();
     return () => dialog?.close();
   }, []);

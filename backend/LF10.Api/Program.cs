@@ -6,6 +6,7 @@ using LF10.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+// DB + Filter früh registrieren, damit die API direkt startklar ist.
 builder.Services.AddDatabase(builder.Configuration.GetConnectionString("Default"));
 builder.Services.AddHarassmentFilter();
 
@@ -30,6 +31,12 @@ app.Services.GetRequiredService<IFilterService>();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/openapi/v1.json", "HugYou API v1");
+        options.RoutePrefix = "swagger";
+    });
 }
 
 app.UseHttpsRedirection();
