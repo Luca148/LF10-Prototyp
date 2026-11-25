@@ -9,7 +9,7 @@ on:
       - main
       - backend
   pull_request:
-    branches: [ "Main" ]
+    branches: [ "main" ]
 
 jobs:
   build:
