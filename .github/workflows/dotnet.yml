@@ -18,18 +18,19 @@ jobs:
 
     steps:
       - name: Repository checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
       - name: .NET install
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
+      # The solution holds both test projects (filter and API); neither needs MySQL.
       - name: Restore
-        run: dotnet restore backend/HarassmentFilter.Test/HarassmentFilter.Test.csproj
+        run: dotnet restore backend/LF10.Api/LF10.Api.slnx
 
       - name: Build
-        run: dotnet build backend/HarassmentFilter.Test/HarassmentFilter.Test.csproj --configuration Release --no-restore
+        run: dotnet build backend/LF10.Api/LF10.Api.slnx --configuration Release --no-restore
 
       - name: Tests Execution
-        run: dotnet test backend/HarassmentFilter.Test/HarassmentFilter.Test.csproj --no-build --configuration Release --logger "console;verbosity=normal"
+        run: dotnet test backend/LF10.Api/LF10.Api.slnx --no-build --configuration Release --logger "console;verbosity=normal"

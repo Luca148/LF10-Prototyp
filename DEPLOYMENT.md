@@ -1,9 +1,10 @@
 # Deployment
 
-The app runs as three containers, wired together by `docker-compose.yml`:
+The app runs as four containers, wired together by `docker-compose.yml`:
 
 | Service      | Image base                             | Role                                                                            |
 |--------------|----------------------------------------|--------------------------------------------------------------------------------|
+| `db`         | `mysql:8.4`                            | MySQL database (filter rules), internal only, data in the `db-data` volume     |
 | `backend`    | `mcr.microsoft.com/dotnet/aspnet:10.0` | ASP.NET Core API + SignalR hub, listens on `:8080` (internal only)              |
 | `frontend`   | `nginx:1.27-alpine`                    | Serves the built React app, reverse-proxies `/api` and `/chathub` to `backend` |
 | `cloudflared`| `cloudflare/cloudflared`              | Outbound-only Cloudflare Tunnel connector; publishes the site on the subdomain |
@@ -39,7 +40,7 @@ Prerequisites: Docker Engine + the Compose plugin.
 ```bash
 git clone <repo-url>
 cd LF10-Prototyp
-cp .env.example .env          # then paste the tunnel token into .env
+cp .env.example .env          # then fill in the tunnel token and both MySQL passwords
 docker compose up -d --build
 ```
 
@@ -51,16 +52,42 @@ Useful commands:
 docker compose logs -f                 # tail logs (all services)
 docker compose logs -f cloudflared     # tunnel connection status
 docker compose up -d --build           # rebuild + redeploy after a git pull
-docker compose down                     # stop (keeps the data volume)
-docker compose down -v                  # stop and delete the data volume (wipes users)
+docker compose down                     # stop (keeps the database volume)
+docker compose down -v                  # stop and delete the database volume (wipes all data)
 ```
 
 ## Persistent data
 
-Registered users live in `Data/User.json` inside the `backend-data` named volume.
-It survives `down` / `up` and redeploys. `Data/Harassment.json` (the filter rules)
-is refreshed from the image on every container start, so editing that file and
-redeploying is enough to update the rules.
+All data lives in MySQL, in the `db-data` named volume. It survives `down` / `up`
+and redeploys.
+
+On startup the backend applies any pending EF Core migrations (see
+`backend/LF10.Data/Migrations`). On a fresh database that creates the tables
+and inserts the initial filter rules; after that the database is the only source
+of the rules.
+
+### Changing the filter rules
+
+Edit the `FilterWords` / `FilterPhrases` tables directly, then restart the backend
+(the rules are read once on startup):
+
+```bash
+docker compose exec db mysql -u hugyou -p hugyou      # password = MYSQL_PASSWORD
+```
+```sql
+-- CategoryId refers to FilterCategories.Id; all languages are filtered at once
+INSERT INTO FilterWords (CategoryId, Language, CurseWord, FilterWord)
+VALUES ((SELECT Id FROM FilterCategories WHERE Name = 'Bullying'), 'en', 'nerd', 'expert');
+```
+```bash
+docker compose restart backend
+```
+
+### Upgrading from the JSON version
+
+Older deployments kept their data in a `backend-data` volume (`Harassment.json`,
+`User.json`). Nothing uses it anymore. Once the new version runs fine, it can be
+removed with `docker volume ls` → `docker volume rm <project>_backend-data`.
 
 ## Notes
 

@@ -1,21 +1,10 @@
-﻿using System.Text.Json;
-using HarassmentFilter.Core.Models;
+﻿using HarassmentFilter.Core.Models;
 using HarassmentFilter.Core.Services;
 namespace HarassmentFilter.Test;
 
 public class FilterTest
 {
-    private readonly HarassmentFilterService service;
-
-    public FilterTest()
-    {
-        string json = get_json_harrasment();
-
-        HarassmentFilterConfiguration configuration =
-            JsonSerializer.Deserialize<HarassmentFilterConfiguration>(json);
-
-        service = new(configuration);
-    }
+    private readonly HarassmentFilterService service = new(TestRules.Create());
 
     [Fact]
     public void DetectSexualContent()
@@ -230,14 +219,5 @@ public class FilterTest
         FilterResult result = service.FilterMessage("hello");
 
         Assert.InRange(result.Timestamp, before, DateTime.Now);
-    }
-
-    public string get_json_harrasment()
-    {
-        return File.ReadAllText(
-        Path.Combine(
-            Directory.GetCurrentDirectory(),
-            "Data",
-            "Harassment.json"));
     }
 }

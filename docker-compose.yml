@@ -1,13 +1,35 @@
 services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: hugyou
+      MYSQL_USER: hugyou
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      # Persists the database across restarts and redeploys.
+      - db-data:/var/lib/mysql
+    healthcheck:
+      # Over TCP on purpose: while MySQL sets up a fresh volume it only listens
+      # on its socket, so this stays unhealthy until the real server is up.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
   backend:
     build:
       context: ./backend
     restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Production
-    volumes:
-      # Persists Data/User.json across restarts and redeploys.
-      - backend-data:/app/Data
+      ConnectionStrings__Default: "Server=db;Database=hugyou;User=hugyou;Password=${MYSQL_PASSWORD}"
+    depends_on:
+      # The backend creates/updates the tables on startup, so MySQL has to be ready.
+      db:
+        condition: service_healthy
     expose:
       - "8080"
 
@@ -34,4 +56,4 @@ services:
       - frontend
 
 volumes:
-  backend-data:
+  db-data:

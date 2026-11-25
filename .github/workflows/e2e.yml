@@ -1,0 +1,80 @@
+name: HugYou E2E Test
+
+on:
+  push:
+    branches: [ "main", "Backend" ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+
+    runs-on: ubuntu-latest
+
+    services:
+      # Same database, user and password as backend/LF10.Api/appsettings.json.
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: hugyou
+          MYSQL_USER: hugyou
+          MYSQL_PASSWORD: hugyou
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+          --health-start-period 30s
+
+    steps:
+      - name: Repository checkout
+        uses: actions/checkout@v7
+
+      - name: .NET install
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Node install
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+
+      # The https launch profile needs a dev certificate. Vite doesn't check it.
+      - name: HTTPS dev certificate
+        run: dotnet dev-certs https
+
+      - name: Build backend
+        run: dotnet build backend/LF10.Api/LF10.Api.csproj
+
+      - name: Frontend restore
+        run: npm ci
+        working-directory: frontend
+
+      - name: E2E restore
+        run: npm ci
+        working-directory: e2e
+
+      - name: Browser install
+        run: npx playwright install --with-deps chromium
+        working-directory: e2e
+
+      # Playwright starts the backend and the frontend itself (playwright.config.ts).
+      - name: Tests Execution
+        run: npx playwright test
+        working-directory: e2e
+
+      - name: Upload report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: e2e/playwright-report/
+          retention-days: 7

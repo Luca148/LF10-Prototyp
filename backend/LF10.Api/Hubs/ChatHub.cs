@@ -1,4 +1,5 @@
-﻿using HarassmentFilter.Core.Interfaces;
+﻿using System.Collections.Concurrent;
+using HarassmentFilter.Core.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 

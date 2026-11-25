@@ -6,7 +6,22 @@ namespace HarassmentFilter.Core.Services;
 
 public class HarassmentFilterService(HarassmentFilterConfiguration configuration) : IFilterService
 {
-    private FilterResult emptyResult = new()
+    private static readonly IReadOnlyDictionary<char, char[]> LeetReplacements =
+        new Dictionary<char, char[]>
+        {
+            ['a'] = ['4', '@'],
+            ['b'] = ['8'],
+            ['e'] = ['3'],
+            ['g'] = ['6', '9'],
+            ['i'] = ['1', '!', '|'],
+            ['l'] = ['1', '|'],
+            ['o'] = ['0'],
+            ['s'] = ['5', '$'],
+            ['t'] = ['7', '+'],
+            ['u'] = ['#']
+        };
+
+    private readonly FilterResult emptyResult = new()
     {
         Message = string.Empty,
         HarassmentTypes = ["None"]
@@ -32,7 +47,10 @@ public class HarassmentFilterService(HarassmentFilterConfiguration configuration
 
         harassmentTypes = [.. harassmentTypes.Distinct()];
 
-        if (harassmentTypes.Count == 0) harassmentTypes.Add("None");
+        if (harassmentTypes.Count == 0)
+        {
+            harassmentTypes.Add("None");
+        }
 
         response.Message = result;
         response.HarassmentTypes = harassmentTypes;
@@ -50,21 +68,87 @@ public class HarassmentFilterService(HarassmentFilterConfiguration configuration
         {
             foreach (var entry in selectEntries(category))
             {
-                var pattern = $@"\b{Regex.Escape(entry.Key)}(s|ed|ing|d|er|est)?\b";
+                var pattern = BuildObfuscatedPattern(entry.Key);
+                var regexOptions = RegexOptions.IgnoreCase | RegexOptions.CultureInvariant;
 
-                if (Regex.IsMatch(text, pattern, RegexOptions.IgnoreCase))
+                if (!Regex.IsMatch(text, pattern, regexOptions))
                 {
-                    foundTypes.Add(category.Type);
-
-                    text = Regex.Replace(
-                        text,
-                        pattern,
-                        m => entry.Value + m.Groups[1].Value,
-                        RegexOptions.IgnoreCase);
+                    continue;
                 }
+
+                foundTypes.Add(category.Type);
+
+                text = Regex.Replace(
+                    text,
+                    pattern,
+                    match => entry.Value + match.Groups["suffix"].Value,
+                    regexOptions);
             }
         }
 
         return text;
+    }
+
+    /// <summary>
+    /// Builds a pattern that recognizes common obfuscation techniques:
+    /// - separators between letters, e.g. "F U C K" or "f.u.c.k"
+    /// - common leetspeak substitutions, e.g. "b00bs" or "f#ck"
+    /// - camel-case boundaries, e.g. "aFuck"
+    /// </summary>
+    private static string BuildObfuscatedPattern(string entry)
+    {
+        var words = Regex.Split(entry.Trim(), @"\s+")
+            .Select(BuildWordPattern)
+            .Where(wordPattern => !string.IsNullOrEmpty(wordPattern))
+            .ToArray();
+
+        if (words.Length == 0)
+        {
+            return "(?!)";
+        }
+
+        // A phrase must still have a separator between its individual words.
+        var phrasePattern = string.Join(@"[^\p{L}\p{N}]+", words);
+
+        // Keep the original inflection handling (s, ed, ing, d, er, est).
+        const string suffixPattern = @"(?<suffix>s|ed|ing|d|er|est)?";
+
+        // The second alternative allows a match after a lowercase-to-uppercase
+        // transition, so "aFuck" is detected without matching "class" as "ass".
+        const string startBoundary =
+            @"(?:(?<![\p{L}\p{N}])|(?<=(?-i:[a-z]))(?=(?-i:[A-Z])))";
+        const string endBoundary =
+            @"(?:(?=$|[^\p{L}\p{N}])|(?<=(?-i:[a-z]))(?=(?-i:[A-Z])))";
+
+        return startBoundary + phrasePattern + suffixPattern + endBoundary;
+    }
+
+    private static string BuildWordPattern(string word)
+    {
+        var characters = word
+            .Where(char.IsLetterOrDigit)
+            .Select(BuildCharacterPattern)
+            .ToArray();
+
+        // Non-letter/non-number characters may appear between letters of a word.
+        // This covers spaces, dots, underscores, hyphens and similar separators.
+        return string.Join(@"[^\p{L}\p{N}]*", characters);
+    }
+
+    private static string BuildCharacterPattern(char character)
+    {
+        var normalizedCharacter = char.ToLowerInvariant(character);
+        var alternatives = new HashSet<char> { normalizedCharacter };
+
+        if (LeetReplacements.TryGetValue(normalizedCharacter, out var replacements))
+        {
+            foreach (var replacement in replacements)
+            {
+                alternatives.Add(replacement);
+            }
+        }
+
+        var characterClass = string.Concat(alternatives.Select(value => Regex.Escape(value.ToString())));
+        return $"[{characterClass}]";
     }
 }
