@@ -33,4 +33,3 @@ At the latest checked `main` commit, the backend test workflow and browser end-t
 - The backend generates an OpenAPI JSON document in Development, but a browsable Swagger UI page is not included yet.
 - Add a dedicated unit test for an obfuscated, spaced word such as `fu ck`, alongside harmless-text cases.
 - The frontend has an automatic code-check command, but GitHub Actions does not run it yet. This check looks for likely coding mistakes; it is a development check, not an app feature.
-- Check the token-like value in the public `.env.example`. If it is real, revoke or rotate it and replace it with a harmless placeholder. Do not copy the value into release notes or screenshots.
