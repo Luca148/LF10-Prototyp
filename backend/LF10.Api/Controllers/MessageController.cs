@@ -4,9 +4,6 @@ using Microsoft.AspNetCore.Http.Metadata;
 
 namespace LF10.Api.Controllers
 {
-    /// <summary>
-    /// Endpunkte zum Prüfen und Filtern von Chat-Nachrichten.
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class MessagesController(IFilterService filter) : ControllerBase
@@ -18,11 +15,6 @@ namespace LF10.Api.Controllers
         [EndpointDescription("Nimmt eine Textnachricht entgegen und gibt die bereinigte Version gemäß aktiver Filterregeln zurück.")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        /// <summary>
-        /// Prüft den Nachrichtentext mit dem Harassment-Filter.
-        /// </summary>
-        /// <param name="message">Der zu prüfende Nachrichtentext.</param>
-        /// <returns>Die gefilterte Nachricht.</returns>
         public IActionResult Filter(
             [FromBody] string message)
         {

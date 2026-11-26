@@ -17,7 +17,6 @@ public static class FilterConfigurationLoader
 
         return new HarassmentFilterConfiguration
         {
-            // Baut pro Kategorie die Wörter- und Phrasen-Map für den Runtime-Filter.
             HarassmentCategories = [.. categories.Select(c => new HarassmentCategory
             {
                 Type = c.Name,

@@ -11,7 +11,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Kategorienamen sollen eindeutig bleiben (z. B. no duplicate "sexism").
         modelBuilder.Entity<FilterCategoryEntity>(category =>
         {
             category.Property(c => c.Name).HasMaxLength(50).IsRequired();
@@ -34,7 +33,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             phrase.Property(p => p.Language).HasMaxLength(5).IsRequired();
             phrase.Property(p => p.CursePhrase).HasMaxLength(100).IsRequired();
             phrase.Property(p => p.FilterPhrase).HasMaxLength(100).IsRequired();
-            // Gleiches Prinzip wie bei Wörtern: Originalphrase darf nur einmal existieren.
+            // Unique for the same reason as words.
             phrase.HasIndex(p => p.CursePhrase).IsUnique();
         });
     }

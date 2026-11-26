@@ -7,14 +7,14 @@ namespace LF10.Api.Hubs
 {
     public class ChatHub(IFilterService filter) : Hub
     {
-        // Merkt sich pro Connection, in welchem Raum der User gerade ist.
+        // Static because SignalR creates a new hub instance for every call.
         private static readonly ConcurrentDictionary<string, (int chatRoomId, string username)> _connectedUsers = new();
 
         public async Task JoinRoom(int chatRoomId, string username)
         {
-            // Connection der SignalR-Gruppe (Raum) zuordnen.
             await Groups.AddToGroupAsync(Context.ConnectionId, chatRoomId.ToString());
-            // Für die Userliste speichern wir Raum + Name lokal.
+            // SignalR can't list the members of a group, so the hub keeps
+            // track of them itself for the user list.
             _connectedUsers[Context.ConnectionId] = (chatRoomId, username);
             await BroadcastUserList(chatRoomId);
         }
@@ -32,7 +32,6 @@ namespace LF10.Api.Hubs
 
         private async Task BroadcastUserList(int chatRoomId)
         {
-            // Nimmt nur User aus dem aktuellen Raum.
             var usersInRoom = _connectedUsers.Values
                 .Where(u => u.chatRoomId == chatRoomId)
                 .Select(u => u.username)
@@ -44,7 +43,6 @@ namespace LF10.Api.Hubs
 
         public async Task SendMessage(int chatRoomId, string content, string username)
         {
-            // Nachricht wird vor dem Broadcast gefiltert.
             var result = filter.FilterMessage(content);
 
             // TODO:
@@ -53,7 +51,6 @@ namespace LF10.Api.Hubs
             // 3. save to MySQL
             // 4. only then broadcast
 
-            // Alle im Raum bekommen dieselbe bereinigte Nachricht.
             await Clients.Group(chatRoomId.ToString()).SendAsync("ReceiveMessage", new 
             { 
                 username,
